@@ -1,8 +1,9 @@
-package com.teachmeskills.lesson31playground
+package com.teachmeskills.lesson31playground.location
 
 import android.app.*
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.location.Location
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
@@ -10,10 +11,15 @@ import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.*
+import com.google.android.gms.maps.model.LatLng
+import com.teachmeskills.lesson31playground.MainActivity
+import com.teachmeskills.lesson31playground.R
+import com.teachmeskills.lesson31playground.checkLocationPermission
 
 class LocationService : Service() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
+    private val locationListeners = mutableSetOf<LocationListener>()
     private val locationCallback = object : LocationCallback() {
 
         override fun onLocationResult(locationResult: LocationResult) {
@@ -22,8 +28,18 @@ class LocationService : Service() {
             }
 
             val location = locationResult.locations.last()
-            Log.i("ttt", "latitude=${location?.latitude} longitude=${location?.longitude}")
+            locationListeners.forEach {
+                it.onLocationChange(location)
+            }
         }
+    }
+
+    fun addListener(listener: LocationListener) {
+        locationListeners.add(listener)
+    }
+
+    fun removeListener(listener: LocationListener) {
+        locationListeners.remove(listener)
     }
 
     override fun onCreate() {
@@ -106,6 +122,10 @@ class LocationService : Service() {
 
 }
 
+
+interface LocationListener {
+    fun onLocationChange(location: Location)
+}
 
 class LocationBinder(
     val service: LocationService

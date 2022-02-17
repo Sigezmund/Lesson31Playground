@@ -1,38 +1,17 @@
 package com.teachmeskills.lesson31playground
 
 import android.Manifest
-import android.content.ComponentName
-import android.content.Intent
-import android.content.ServiceConnection
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
-import android.util.Log
 import android.widget.Button
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
+import com.teachmeskills.lesson31playground.base.BaseLocationActivity
+import com.teachmeskills.lesson31playground.map.MapsActivity
 
-class MainActivity : AppCompatActivity() {
-
-    private var binder: LocationBinder? = null
-
-    //    Callback для подключения к сервису
-    private val serviceConnection = object : ServiceConnection {
-        override fun onServiceConnected(p0: ComponentName?, p1: IBinder) {
-//            Принимаем биндер из сервиса
-            binder = p1 as LocationBinder
-        }
-
-        override fun onServiceDisconnected(p0: ComponentName?) {
-
-        }
-
-    }
+class MainActivity : BaseLocationActivity() {
 
     //    Пермишены на местоположение
     private val locationPermissionRequest = registerForActivityResult(
@@ -62,12 +41,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        Присоединяемся к сервису
-        bindService(
-            Intent(this, LocationService::class.java),
-            serviceConnection,
-            BIND_AUTO_CREATE
-        )
 
 //        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -78,15 +51,13 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.stopLocationUpdates).setOnClickListener {
             binder?.service?.stopLocationUpdates()
         }
+        findViewById<Button>(R.id.openMap).setOnClickListener {
+            startActivity(MapsActivity.getLaunchIntent(this))
+        }
 
 
     }
 
-    override fun onDestroy() {
-//        Отсоединяемся от сервиса
-        unbindService(serviceConnection)
-        super.onDestroy()
-    }
 
 //    private fun getLastLocation() {
 //        if (checkLocationPermission()) {
@@ -117,8 +88,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
-
     private fun startBackgroundLocationUpdates() {
         if (checkLocationPermission()) {
             if (checkBackgroundLocationPermission()) {
@@ -142,6 +111,7 @@ class MainActivity : AppCompatActivity() {
                         it.startResolutionForResult(this, 1)
                     }
                 }
+//                binder?.service?.startLocationUpdates(locationRequest)
             } else {
                 requestBackgroundLocationPermission()
             }
